@@ -1,0 +1,374 @@
+---
+title: "HW1"
+author: "Jingshi"
+date: "1/25/2017"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+##Question 4
+
+##a)
+
+Example 1: Suppose a doctor want to find out whether or not a patient has diabetes (this is the response). The doctor collects several information from the patient such as blood glucose, weight, height, and etc. (these variables are the predictors). Then the doctor decides whether or not the patient has diabetes based on the information he collected. This is an example of classification. The goal is prediction.
+
+
+Example 2: Suppose a medical institute wants to investigate which variables indicate diabetes (whether or not a patient has diabetes is the response). The institute collects data from a sample of random patients of both diabetes and non-diabetes. Several variables of each patient are collected such as blood glucose, weight, height, gender and etc. By statistical analysis, the institute decide which variables are necessary or significant in order to predict if a patient has diabetes (these variables are the predictors). This is an example of classification. The goal is inference. 
+
+
+Example 3: Suppose we are given Capital Bikeshare data from the second quarter of 2016. Each row of the data set is a bike that is out for service. Columns in the data set are variables such as duration of the trip, bike identification number, date, and etc. (these variables are the predictors). We would like to predict whether or not a bike is in repair shop instead of used by customers based on the given variables. So the response is whether or not a bike is in repair shop. This is an example of classification. The goal is prediction.
+
+##b)
+
+Example 1: Suppose we want to predict a student’s GRE score based on his or her GPA and hours spent for preparing GRE test that we know. We also know there is a function that takes his or her GPA and hours spent for studying GRE as input and output GRE score. We plug in this function and calculate the student score. This is an example of regression. The response is a student’s GRE score. The predictors are his or her GPA and hours spent for preparing GRE test. The goal is prediction.
+
+
+Example 2: Suppose we want to generate a function to predict a student’s GRE score based on two variables-his or her GPA and hours spent for preparing GRE test. We collect a sample of random students who have taken GRE test along with their GPA and hours spent for preparing GRE test. Then, we fit a model with multiple linear regression to see if the variables are significant. This is an example of regression. The response is a student’s GRE score. The predictors are his or her GPA and hours spent for preparing GRE test. The goal is inference.
+
+
+Example 3: Suppose we want to find out whether or not hours of studying per week can predict a student’s GPA at Georgetown University. We collected a sample of random students along with their hours of studying per week and GPA at Georgetown University. Then, we fit a model with linear regression to see if hours of studying per week is a significant predictor of GPA. This is an example of regression. The response is a student’s GPA at Georgetown University. The predictors are his or her hours spent for studying per week. The goal is inference.
+
+##c)
+
+Example 1: Suppose we want to cluster tweets on twitter based on their sentiments of six so-called “basic” emotions (i.e. anger, disgust, happiness, sadness, surprise, and fear). Each tweet is assigned a score for each of the emotion which is the percentage of words appear in the emotional category. Then, we conduct a K-means cluster analysis to determine if the tweets fell into emotion patterns that could be used for grouping purposes. 
+
+
+Example 2: Suppose we want to group students at Georgetown University based on their hobbies, major, years of study. In this case, cluster analyses might be useful.
+
+
+Example 3: Suppose we want to group species based on species’ characteristics such as bipedalism or reptile, amphibian or not, and etc. In this case, cluster analyses might be useful.
+
+
+
+
+
+##Question 7
+
+##a)
+
+$$\ d1 = \sqrt{(0 - 0)^2 + (3 - 0)^2+(0 - 0)^2} = 3$$
+$$\ d2 = \sqrt{(2 - 0)^2 + (0 - 0)^2+(0 - 0)^2} = 2$$
+$$\ d3 = \sqrt{(0 - 0)^2 + (1 - 0)^2+(3 - 0)^2} = 3.162278$$
+$$\ d4 = \sqrt{(0 - 0)^2 + (1 - 0)^2+(2 - 0)^2} = 2.236068$$
+$$\ d5 = \sqrt{(-1 - 0)^2 + (0 - 0)^2+(1 - 0)^2} = 1.414214$$
+$$\ d6 = \sqrt{(1 - 0)^2 + (1 - 0)^2+(1 - 0)^2} = 1.732051$$
+
+##b)
+Let x0 be the point that X1=X2=X3=0.
+When k = 1, the 1 point that closest to x0 is observation number 5 which is green.
+Pr(Y =Green|X=x0) =1. Thus, the largest probability is green.
+So the predicton is green.
+
+##c)
+Let x0 be the point that X1=X2=X3=0.
+When k = 3, the 3 points that closest to x0 are observatino number 2, 5, and 6.
+There are two reds and one green. 
+So,
+Pr(Y =Green|X=x0) =1/3,
+Pr(Y =Red|X=x0) =2/3.
+Thus, the largest probability is red. So the prediction is red.
+
+##d)
+As K increase, the boundary tends to be linear, thus, the best value of K is small in this problem (when the Bayes decision boundary is highly non- linear).
+
+
+##Question 8
+
+##a)
+
+```{r}
+#install.packages('ISLR')
+library('ISLR')
+data(College)
+setwd("/Users/jingshisun/Desktop/Spring 2017 Courses/ANLY 512/HW1")
+college <- read.csv("College.csv")
+```
+
+##b)
+
+```{r}
+rownames(college)=college[,1]
+fix(college)
+college=college[,-1]
+fix(college)
+```
+
+##c)
+
+##i)
+
+```{r}
+summary(college)
+```
+
+##ii)
+
+```{r}
+pairs(college[,1:10])
+```
+
+##iii)
+
+```{r}
+plot(college$Private, college$Outstate, xlab = "Whether or not it is a private university", 
+     ylab ="Out-of-state Tuition", main = "Side-by-side Boxplots of Outstate Versus Private")
+```
+
+##iv)
+
+```{r}
+Elite=rep("No",nrow(college))
+Elite[college$Top10perc >50]="Yes"
+Elite=as.factor(Elite)
+college=data.frame(college ,Elite)
+summary(college)
+plot(college$Elite,college$Outstate, xlab="Whether or not it is an elite university", 
+     ylab="Out-of-state Tuition", main="Side-by-side Boxplots of Outstate versus Elite")
+
+```
+
+##v)
+
+```{r}
+par(mfrow = c(2,2))
+hist(college$Enroll, col = 12, xlab = "Number of new students enrolled", ylab = "Count")
+hist(college$F.Undergrad, col = 10, xlab = "Number of full-time undergraduates", ylab = "Count")
+hist(college$Outstate, col = 3, xlab = "Out-of-state tuition", ylab = "Count")
+hist(college$Books, col = 6, xlab="Estimated book costs", ylab = "Count")
+
+```
+
+##vi)
+
+```{r}
+summary(college$Enroll) # summary of number of new students enrolled
+```
+According to the summary and histogram, most (more than 3/4) of the colleges have new students entrolled under 1000. Although, there is a university has 6392 new students enrolled, the median is 434.
+
+
+
+```{r}
+summary(college$F.Undergrad) # summary of number of full-time undergraduates
+```
+According to the summary and histogram, most (more than 3/4) of the colleges have number of full-time undergraduates less than 5000. Although, thre is a university has 31640 full-time undergraduates, the median is 1707.
+
+
+
+```{r}
+summary(college$Outstate) #summary of out-of-state tuition
+```
+Most of colleges' out of state tuitions are between around 5000 USD and 15000 USD. The college with the highest tuition (21700 USD) is about 10 times of the lowerst (2340 USD). The median is 9990 USD.
+
+
+
+```{r}
+summary(college$Books) #summary of estimated book costs
+```
+The median estimated book costs is about 500 USD which is close to the mean (549.4 USD). As the histogram shown, the distribution of estimated book costs is approximated symmetrical. The college with the highes estimated book cost (2340 USD, could be considered as an outlier) is about 24 time the college with the lowest estimated book cost (96 USD). 
+
+##Q10
+
+##a)
+
+```{r}
+library(MASS)
+head(Boston)
+?Boston
+```
+There are 506 rows and 14 columns in the Boston data set. Each row represents an observation of a suburb in Boston. Each column represents one attribute (such as per capita crime rate by town,average number of rooms per dwelling, pupil-teacher ratio by town and etc.) of a town in Boston.
+
+
+##b)
+
+```{r}
+pairs(Boston) #pairwise scatterplots of all predictors.
+```
+
+
+At first glance, the plots are so small if I do pairwise scatterplots of every predictors. Let's just focus a few predictors.
+
+```{r}
+# make pairwise scatterplots of lstat, medv, age, dis and crim.
+pairs(~lstat+medv+age+dis+crim, data=Boston )
+```
+
+
+According to the scatter plots, there is a strong negative curved relationship between lstat (lower status of the population (percent)) and medv (median value of owner-occupied homes in \$1000s). There is also a moderate negative linear relationship between age (proportion of owner-occupied units built prior to 1940) and dis (weighted mean of distances to five Boston employment centres).
+There is also a moderate positive curved relationship between age (proportion of owner-occupied units built prior to 1940) and crim (per capita crime rate by town). Additionally, there is a strong negative curved relationship between dis (weighted mean of distances to five Boston employment centres) and crim (per capita crime rate by town).
+
+
+##c)
+
+```{r}
+# divide the print window into 15 (3 x 5) regions.
+par(mfrow = c(3,5)) 
+# for each predictors, add a scatter plot of the predictor and crim 
+# into the window.
+for(variable in names(Boston)){
+  plot(Boston$crim, Boston[, variable], xlab="crim", ylab = variable)
+}
+```
+
+
+As the output shown, there is a moderate positive curved relationship between crim (per capita crime rate by town) and age (proportion of owner-occupied units built prior to 1940). There is a strong negative curved relationship between crim (per capita crime rate by town) and dis (weighted mean of distances to five Boston employment centres). Moreover, there is a moderate negative curved relationship between crim (per capita crime rate by town) and medv (median value of owner-occupied homes in \$1000s).
+
+##d)
+
+```{r}
+# set the print window back into 1 region.
+par(mfrow = c(1,1)) 
+summary(Boston$crim)
+hist(Boston$crim)
+#count number of rows/suburbs that have crime rate above 20.
+nrow(Boston[Boston$crim > 20, ]) 
+```
+As you can see from the output, most of the suburbs have crime rate under 20. However, there are some extreme cases. There are 18 suburbs have crime rate above 20 and one has a extremely high crime ratio of 88.98. The range is between 0.00632 and 88.98.
+
+
+```{r}
+summary(Boston$tax)
+hist(Boston$tax)
+#count number of rows/suburbs that have tax rate above 700.
+nrow(Boston[Boston$tax > 700, ]) 
+```
+The range of tax rate is betwwen 187 and 711. There seems to be two clusters. The lower cluster ranges between 187 and 500. The higher cluster ranges above 600. There are 5 particularly high cases (higher than 700).
+
+
+```{r}
+summary(Boston$ptratio)
+hist(Boston$ptratio)
+#count number of rows/suburbs that have pupil-teacher ratio above 21.
+nrow(Boston[Boston$ptratio > 21, ]) 
+```
+The pupil-teacher ratios range from 12.6 to 22. As you can see from the histogram, most of them are between 14 and 21. There are 18 particularly high cases (higher than 21) of pupil-teacher ratio.
+
+
+##e)
+
+```{r}
+#count number of rows/suburbs that bound the Charles river.
+nrow(Boston[Boston$chas == 1, ]) 
+```
+
+
+##f)
+
+```{r}
+summary(Boston$ptratio)
+```
+According to the summary, median pupil-teacher ratio among the towns in this data set is 19.05.
+
+##g)
+
+```{r}
+# Find suburbs of Boston that has lowest 
+# median value of owner-occupied homes.
+Boston[Boston$medv == min(Boston$medv),]
+summary(Boston)
+```
+According to the output, there are 2 surburbs that have lowest median value of owner-occupied homes. They are observation number 399 and 406. As I noticed, both two suburbs have high crime rates (above 30). One is 38.3518, the other is 67.9208 which is extremely high. Both of the suburbs have 0 zn (proportion of residential land zoned for lots over 25,000 sq.ft.) which is lower than the mean value of zn (11.36%). 
+
+Both of the suburbs are not bounded by Charles River. Both suburbs have higher than median nitrogen oxides concentration. Both of the suburbs have 100 percent of owner-occupied units build prior to 1940. Both suburbs have low weighted mean of distances to five Boston employment centres. Both suburbs have the highest index of accessibility to radial highways. Both suburbs have higher than median pupil-teacher ratio. Suburbs number 399 have the highest proportion of blacks.
+
+What's more, both suburbs higher than median (and mean) lower status of the population. Besides these, the rest of the predictors range between 1st and 3rd quarter of the total.
+
+##h)
+
+```{r}
+#Count the number of rows/suburbs average more than 7 rooms per dwelling
+nrow(Boston[Boston$rm > 7, ]) 
+#Count the number of rows/suburbs average more than 8 rooms per dwelling
+nrow(Boston[Boston$rm > 8, ]) 
+```
+As you can see from the output, 64 suburbs average more than seven rooms per dwelling, 13 suburbs average more than seven rooms per dwelling.
+
+```{r}
+summary(Boston) # summary of all suburbs
+# summary of suburbs average more than 8 rooms per dwelling.
+summary(Boston[Boston$rm > 8, ]) 
+```
+From the above output, we can see that the suburbs that average more than eight rooms per dwelling have lower average crime rates, higher average median value of owner-occupied homes in \$1000s, lower percent in lower status of the population, lower tax rates, and have a higerer proportion that are bounded by Charles River than the average of the suburbs.
+
+
+
+##The Shiny Question
+
+##a)
+
+Simulation    |Residual SS   | Highest Order Coefficient
+------------- |------------- | -------------
+1             |63.88         | -4.5
+2             |104.03        | -4.5
+3             |77.96         | -3.5
+4             |80.13         | -3.5
+5             |124.26        | -4.3
+6             |92.68         | -4.1
+7             |73.55         | -4.7
+8             |79.8          | -3.5
+9             |77.03         | -3.9
+10            |79.96         | -4.2
+
+```{r}
+1/10*(63.88+104.03+77.96+80.13+124.26+92.68+73.55+79.8+77.03+79.96) # The average of residual SS
+#The approximate range of the highest order coefficient
+range(c(-4.5,-4.5,-3.5,-3.5,-4.3,-4.1,-4.7,-3.5,-3.9,-4.2)) 
+```
+According to the output, the average residual SS is 85.328 and the approximate range of the highest order coefficient is from -4.7 to -3.5.
+
+##b)
+
+Simulation    |Residual SS   | Coefficient #2
+------------- |------------- | -------------
+1             |44.2          | 14.9
+2             |39.58         | -31.5
+3             |28.79         | -7.4
+4             |32.17         | 0.2
+5             |24.7          | -26
+6             |38.94         | 12.6
+7             |23.95         | -16.5
+8             |26.13         | 17.5
+9             |40.4          | -14.9
+10            |35.46         | -26
+
+```{r}
+1/10*(44.2+39.58+28.79+32.17+24.7+38.94+23.95+26.13+40.4+35.46) # The average of residual SS
+#The approximate range of the coefficient #2
+range(c(14.9,-31.5,-7.4,0.2,-26,12.6,-16.5,17.5,-14.9,-26)) 
+```
+According to the output, the average residual SS is 33.432 and the approximate range of the coefficient #2 is from -31.5 to 17.5.
+
+##c)
+
+After many times of simulations, it becomes clear to me that the coefficient has the largest variation is coefficient #6.
+Thus, I will record 10 simulations with residual ss and coefficient #6 in below.
+
+Simulation    |Residual SS   | Coefficient #6
+------------- |------------- | -------------
+1             |4.53          | $$3.1\times 10^5$$
+2             |8.5           | $$8.5\times 10^5$$
+3             |15.77         | $$-1.75\times 10^5$$
+4             |4.9           | $$1.3\times 10^6$$
+5             |14.19         | $$8\times 10^5$$
+6             |2.09          | $$-3.6\times 10^5$$
+7             |6.74          | $$-7.8\times 10^5$$
+8             |7.14          | $$-5.2\times 10^5$$
+9             |0.06          | $$-9\times 10^5$$
+10            |2.63          | $$6.5\times 10^5$$
+
+```{r}
+1/10*(4.53+8.5+15.77+4.9+14.19+2.09+6.74+7.14+0.06+2.63) # The average of residual SS
+#The approximate range of the coefficient #6
+range(c(3.1*10^5,8.5*10^5,-1.75*10^5,1.3*10^6,8*10^5,-3.6*10^5,-7.8*10^5,-5.2*10^5,-9*10^5,6.5*10^5)) 
+```
+According to the output, the average residual SS is 6.655 and the approximate range of the coefficient #6 is from $-9\times 10^5$ to $1.3\times 10^6$.
+
+##e)
+As the model complexity increase, the variance decrease (as you can see from previous questions, the residual SS decrease when model complexity increase from 1 to 4,  then to 16), but the bias increase (as you can see from previous questions, the range of coefficient with the largest range increase dramatically).
+
+##f)
+When model complexity = 2, I typically obtain a curve which is most similar to the unknown curve that is to be estimated, because the curve looks very close to a quadratic equation.
+
+
