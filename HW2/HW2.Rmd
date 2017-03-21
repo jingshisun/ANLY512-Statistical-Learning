@@ -1,0 +1,268 @@
+---
+title: "HW2"
+author: "Jingshi"
+date: "2/1/2017"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+##Question 3
+##a)
+According to the question, the equation is :
+$$ Predicted\ Starting\ Salary=50+20\times GPA+0.07\times IQ+35\times Gender+0.01\times GPA\times IQ-10\times GPA\times Gender$$
+(i) and (ii) are incorrect because there is an negative interaction between Gender and GPA. So the predicted value of starting salary also depends on the value of GPA. Given a fixed value of IQ and GPA, if GPA is high enough (higher than 3.5), males earn more on average; otherwise, if GPA is low (lower than 3.5), females earn more on average. Therefore, (iii) is correct and (iv) is incorrect.
+
+##b)
+By plugging in to the above function:
+$$ Predicted\ Starting\ Salary=50+20\times 4.0+0.07\times 110+35\times 1+0.01\times 4.0\times 110-10\times 4.0\times 1 = 137.1$$
+So the predicted starting salary is 137.1 (in thousands of dolars) or $137,100.
+
+##c)
+It is false because we can not comment on the evidence of an interaction effect only based on the magnitude of the coefficient for the interaction term. We need to compute its p-value in order to make a decition.
+
+##Question 8
+
+##a)
+```{r}
+library(ISLR)
+#help(Auto)
+auto.lm=lm(mpg~horsepower, data =Auto)
+summary(auto.lm)
+
+```
+
+##i/ii/iii)
+
+There is a strong negative linear relationship between horsepower (the predictor) and mpg (the response).
+
+## iv)
+
+```{r}
+# compute the predicted mpg and the associated 95 % confidence interval
+predict(auto.lm,data.frame(horsepower =98), interval = "confidence")
+# compute the predicted mpg and the associated 95 % prediction interval
+predict(auto.lm,data.frame(horsepower =98), interval = "prediction")
+```
+
+According to the output, the predicted mpg is 24.46708.
+The confidence interval is (23.97308,24.96108). The prediction interval is (14.8094, 34.12476) which is wider than the confidence interval.
+
+##b)
+
+```{r}
+plot(Auto$horsepower,Auto$mpg, main = "Scatter Plot of Mpg agaist Horsepower ",xlab="horsepower",
+     ylab="mpg")
+abline(auto.lm)
+```
+
+
+
+##c)
+
+```{r}
+par(mfrow=c(2,2))
+plot(auto.lm)
+```
+
+There appears to be a curved trend. In the residuals vs fitted plots, the residuals are not homoscedastic and do not spread evenly. The standarized residuals are large at lower and higher fitted values and small at middle fitted values. The normal Q-Q plot also shows a curved trend. The scale-location plot also shows a curved trend. Additionally, the plots in residuals vs leverage plot are not normally distributed. These evidences suggest that the relationship between mpg and horsepower is not linear. 
+
+As you can see on the residuals vs leverage plot, both the points with high leverage and low leverage appear to have higher standardized residuals. They could possibly be outliers. There are some outliers with high leverage that are influencial such as observation 117 and 94. 
+
+##Question 10
+
+##a)
+
+```{r}
+seats.lm<-lm(Sales ~ Price + Urban + US, data=Carseats)
+help(Carseats)
+summary(seats.lm)
+```
+
+
+##b)
+According to the output: 
+
+
+Intercept: 13.043469
+Interpretation: When price is 0, the region of store is non-urban and non-US, the expected unit sales is about 13.043 (in thousands).
+
+
+Coefficient for price: -0.054459
+Interpretation: When price increases by 1 unit, sales is expected to decrease by 0.054 (in thousands), holding "urban" and "us" constant.
+
+
+Coefficient for Urban: -0.021916 
+Interpretation: Unit sales for urban stores is expected to be lower than it is for rural by about 0.022 (in thousands), holding "price" and "us" constant.
+
+
+Coefficient for US: 1.200573
+Interpretation: Unit sales for US stores is expected to be higher than it is for non-US stores by about 1.201 (in thousands), holding "price" and "urban" constant.
+
+##c)
+
+$$Predicted\ Sales= 13.043 -  0.054 \times Price - 0.022 \times Urban + 1.201 \times US$$
+Urban = 1 if the store is in an urban location; otherwise, urban = 0.
+US = 1 if the store is in the US; otherwise, US = 0.
+
+
+##d)
+
+The null hypothesis can be rejected for "Price" and "US" because their p-values (< 2e-16 and 4.86e-06 respectively)are much smaller than alpha = 0.05. The null hypothesis cannot be rejected for "Urban" because the p-value for "Urban" (0.936) is much higher than alpha = 0.05. Thus, "Price" and "US" are significant predictors in this model.
+
+##e)
+
+According to the previous question, "Price" and "US" are significant predictors of sales.
+
+```{r}
+
+# fit a new model with "Price" and "US" as predictors
+seats2.lm<-lm(Sales ~ Price + US, data=Carseats)
+summary(seats2.lm)
+
+```
+
+##f)
+
+The model in (e) fits slightly better than the modle in (a) because it has a slightly higher adjusted R-squared (0.2354) and all the predictors are significant (because their p-values (< 2e-16 for "Price" and 4.71e-06 for "US") are much lower than alpha = 0.05).
+Both models are significant because their p-values (both are < 2.2e-16) from F test are much lower than alpha = 0.05.
+
+##g)
+
+```{r}
+# obtain 95% confidence intervals for the coefficients
+confint(seats2.lm)
+```
+
+According to the output, the 95% confidence interval for "Price" is (-0.06475984, -0.04419543). The 95% confidence interval for "US" is (0.69151957, 1.70776632).
+
+##h)
+
+```{r}
+# produce diagnostic plots of the least squares regression fit
+# of model from question e.
+par(mfrow=c(2,2))
+plot(seats2.lm)
+
+```
+
+As the output shows, the residuals spread evenly in the residuals vs fitted plot. There are some outliers such as obervation 51, 69 and 377. The normal Q-Q plot shows a straight line. There appears to be a few points with higher leverage. Only a few points have higher leverage and higher standardized residuals such as observation 368, 50 and 26. These points are influential.
+
+##Question 15
+
+##a)
+
+```{r , results= "hide"}
+library(MASS)
+help("Boston")
+simple.zn=lm(crim~zn,data=Boston)
+simple.indus=lm(crim~indus,data=Boston)
+simple.chas=lm(crim~chas,data=Boston)
+simple.nox=lm(crim~nox,data=Boston)
+simple.rm=lm(crim~rm,data=Boston)
+simple.age=lm(crim~age,data=Boston)
+simple.dis=lm(crim~dis,data=Boston)
+simple.rad=lm(crim~rad,data=Boston)
+simple.tax=lm(crim~tax,data=Boston)
+simple.ptratio=lm(crim~ptratio,data=Boston)
+simple.black=lm(crim~black,data=Boston)
+simple.lstat=lm(crim~lstat,data=Boston)
+simple.medv=lm(crim~medv,data=Boston)
+
+summary(simple.zn)
+summary(simple.indus)
+summary(simple.chas)
+summary(simple.nox)
+summary(simple.rm)
+summary(simple.age)
+summary(simple.dis)
+summary(simple.rad)
+summary(simple.tax)
+summary(simple.ptratio)
+summary(simple.black)
+summary(simple.lstat)
+summary(simple.medv)
+
+```
+
+Predictor     |P-value                 | R-squared
+------------- |------------------------| -------------
+zn            |$5.51\times 10^{-6}$    | 0.03828 
+indus         |$< 2\times 10^{-16}$    | 0.1637 
+chas          |$0.209$                 | 0.001146 
+nox           |$< 2\times 10^{-16}$    | 0.1756 
+rm            |$6.35\times 10^{-7}$    | 0.04618 
+age           |$2.85\times 10^{-16}$   | 0.1227
+dis           |$< 2\times 10^{-16}$    | 0.1425 
+rad           |$< 2\times 10^{-16}$    | 0.39
+tax           |$< 2\times 10^{-16}$    | 0.3383
+ptratio       |$2.94\times 10^{-11}$   | 0.08225
+black         |$< 2\times 10^{-16}$    | 0.1466   
+lstat         |$< 2\times 10^{-16}$    | 0.206 
+medv          |$< 2\times 10^{-16}$    | 0.1491                     
+
+According to the results, most of the models, except for the model with chas as predictor, have statistically significant association between the predictor and the response.
+
+```{r,fig.width=11, fig.height=8}
+# Plots of the models that have statistically significant
+# association between the predictor and the response.
+par(mfrow=c(3,4))
+plot(crim~zn, data = Boston)
+abline(simple.zn, col="green",lwd=2)
+
+plot(crim~indus, data = Boston)
+abline(simple.indus, col="green",lwd=2)
+
+plot(crim~nox, data = Boston)
+abline(simple.nox, col="green",lwd=2)
+
+plot(crim~rm, data = Boston)
+abline(simple.rm, col="green",lwd=2)
+
+plot(crim~age, data = Boston)
+abline(simple.age, col="green",lwd=2)
+
+plot(crim~dis, data = Boston)
+abline(simple.dis, col="green",lwd=2)
+
+plot(crim~rad, data = Boston)
+abline(simple.rad, col="green",lwd=2)
+
+plot(crim~tax, data = Boston)
+abline(simple.tax, col="green",lwd=2)
+
+plot(crim~ptratio, data = Boston)
+abline(simple.ptratio, col="green",lwd=2)
+
+plot(crim~black, data = Boston)
+abline(simple.black, col="green",lwd=2)
+
+plot(crim~lstat, data = Boston)
+abline(simple.lstat, col="green",lwd=2)
+
+plot(crim~medv, data = Boston)
+abline(simple.medv, col="green",lwd=2)
+```
+
+```{r}
+# Plots of the model (with chas as predictor)that 
+# dosn't have statistically significant association 
+# between the predictor and the response.
+plot(crim~chas, data = Boston)
+abline(simple.medv, col="green")
+
+```
+
+##b)
+
+```{r}
+# fit a multiple regression model to predict 
+# crim using all of the predictors
+model.all=lm(crim~.,data=Boston)
+summary(model.all)
+```
+
+The result shows less predictors that are statistically significant for predicting crim than the previous question. This may due to that some predictor variables are correlated.
+The predictors that the null hypothesis can be rejected are zn, dis, rad, black and medv. 
