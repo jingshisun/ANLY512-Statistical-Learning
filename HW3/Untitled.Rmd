@@ -1,0 +1,221 @@
+---
+title: "HW3"
+author: "Jingshi"
+date: "2/8/2017"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+##Question 4
+
+##a)
+
+The training RSS is expected to be lower for the cubic regression than it is for the linear regression. This is due to the Bias-variance tradeoff. Although the true relationship is linear, as the model complexity increase, the training RSS is expected to decrease.
+
+##b)
+
+The test RSS is expected to be lower for the linear regression than it is for the cubic regression. The cubic regression fit training data better, but worse for the test data, since it is biased (the true relationship is linear).
+
+##c)
+
+The training RSS is expected to be lower for the cubic regression than it is for the linear regression. This is due to the Bias-variance tradeoff. Although the true relationship is not linear, as the model complexity increase, the training RSS is expected to decrease.
+
+##d)
+
+Since we don't know the true relationship between X and Y (except for non-linear), we don't know whether it is quadratic, cubic, or any other polynomials, we cannot make a conclusion about RSS of test data set.
+
+
+
+##Question 9
+
+##c)
+
+```{r}
+library(ISLR)
+auto<-lm(mpg~.-name, data=Auto)
+summary(auto)
+```
+
+
+##i)
+
+According to the output, the F-statistic (252.4) is high and the p-value (< 2.2e-16) is much less than any level of $\alpha$. Therefore, the relationship between predictors and response is statistically significant. Moreover, the adjusted R-squared (0.8182) is high, so the relationship is strong.
+
+##ii)
+
+The predictors that are statistically significant are displacement, weight, year and origin due to their p-values are much lower than $\alpha = 0.05$.
+
+##iii)
+
+When model year increase by 1 year, mpg is expected to incerase by 0.750773, keeping other variables constant.
+
+##e)
+
+```{r}
+interaction1<-lm(mpg~displacement*weight, data=Auto)
+summary(interaction1)
+```
+
+The interaction between displacement and weight appears to be significant because the p-value (1.06e-09) of the interaction term is much less than $\alpha = 0.05$. Additionally, the above model is statistically significant because the F-statistic (343.6) is very high and the p-value (< 2.2e-16) is much lower than $\alpha = 0.05$.
+
+```{r}
+interaction2<-lm(mpg~year*displacement, data=Auto)
+summary(interaction2)
+```
+
+The interaction between year and displacement appears to be significant because the p-value (4.96e-13) of the interaction term is much less than $\alpha = 0.05$. Additionally, the above model is statistically significant because the F-statistic (441.7) is very high and the p-value (< 2.2e-16) is much lower than $\alpha = 0.05$.
+
+
+```{r}
+interaction3<-lm(mpg~weight*year, data=Auto)
+summary(interaction3)
+```
+
+The interaction between weight and year appears to be significant because the p-value (8.02e-14) of the interaction term is much less than $\alpha = 0.05$. Additionally, the above model is statistically significant because the F-statistic (649.3) is very high and the p-value (< 2.2e-16) is much lower than $\alpha = 0.05$.
+
+```{r}
+interaction4<-lm(mpg~weight*origin, data=Auto)
+summary(interaction4)
+```
+
+The interaction between weight and origin appears to be significant because the p-value (0.04230) of the interaction term is less than $\alpha = 0.05$. Additionally, the above model is statistically significant because the F-statistic (309.3) is high and the p-value (< 2.2e-16) is much lower than $\alpha = 0.05$.
+
+##f)
+
+```{r}
+transformation1<-lm(mpg~I(displacement^2) + log(weight)+log(year) +origin, data = Auto)
+summary(transformation1)
+```
+
+The model is statistically significant because the F-stsatistic (522.3) is high and p-value (< 2.2e-16) for the F test is very low. All predictors in the model are statistically significant because their p-values are much lower than $\alpha = 0.05$. 
+
+```{r}
+transformation2<-lm(mpg~I(displacement^2) + log(weight)+I(year^2) + origin, data = Auto)
+summary(transformation2)
+```
+
+The model is statistically significant because the F-stsatistic (534.9) is high and p-value (< 2.2e-16) for the F test is very low. All predictors in the model are statistically significant because their p-values are much lower than $\alpha = 0.05$. 
+
+```{r}
+transformation3<-lm(mpg~I(displacement^2) + log(weight)+sqrt(year) + origin, data = Auto)
+summary(transformation3)
+```
+
+The model is statistically significant because the F-stsatistic (525.6) is high and p-value (< 2.2e-16) for the F test is very low. All predictors in the model are statistically significant because their p-values are much lower than $\alpha = 0.05$. 
+
+```{r}
+transformation4<-lm(mpg~I(displacement^2) + sqrt(weight)+log(year) + origin, data = Auto)
+summary(transformation4)
+```
+
+The model is statistically significant because the F-stsatistic (492) is high and p-value (< 2.2e-16) for the F test is very low. All predictors in the model are statistically significant because their p-values are much lower than $\alpha = 0.05$. 
+
+
+##Question 14
+
+##a)
+
+```{r}
+set.seed(1)
+x1=runif(100)
+x2=0.5*x1+rnorm(100)/10
+y=2+2*x1+0.3*x2+rnorm(100)
+```
+
+The form of the linear model:
+$$y=\beta_0+\beta_1\times x_1+\beta_2 \times x_2+\epsilon$$
+
+The regression coefficients are $\beta_0\ (the\ intercept)=2$, $\beta_1=2$ and $\beta_2=0.3$.
+
+##b)
+
+```{r}
+cor (x1,x2)
+plot(x1,x2)
+```
+
+As the output shows, the correlation between x1 and x2 is 0.8351212 which is high. The scatterplot shows that there is a strong positive linear relationship between x1 and x2.
+
+##c)
+
+```{r}
+model1<-lm(y~x1+x2)
+summary(model1)
+```
+
+According to the output, $\hat{\beta_0}=2.1305$, $\hat{\beta_1}=1.4396$, $\hat{\beta_2}=1.0097$. $\hat{\beta_0}$ is slightly larger than $\beta_0$. $\hat{\beta_1}$ is less than $\beta_1$. $\hat{\beta_2}$ is larger than $\beta_2$. The model does not fit quite well because the adjusted R-squared (0.1925) is small.
+
+The null hypothesis $H_0 : \beta_1 = 0$ can be rejected because the p-value for x1 is 0.0487 which is less than $\alpha = 0.5$.
+
+The null hypothesis $H_0 : \beta_2 = 0$ cannot be rejected because the p-value for x2 is 0.3754 which is larger than $\alpha = 0.5$.
+
+##d)
+
+```{r}
+model2<-lm(y~x1)
+summary(model2)
+```
+
+According to the output, $\hat{\beta_0}=2.1124$, $\hat{\beta_1}=1.9759$. Compared with the previous modle in (c), this model ($\hat{y}=2.1124+1.9759 \times x_1$) has a higher F-statistic and smaller p-value of F test, it has a higher adjusted R-squred. Overall, it fits better. 
+
+The null hypothesis $H_0 : \beta_1 = 0$ can be rejected because the p-value for x1 is $2.66 \times 10^{-6}$ which is much less than $\alpha = 0.5$.
+
+##e)
+
+```{r}
+model3<-lm(y~x2)
+summary(model3)
+```
+
+As the output shows, the model is $\hat{y}=2.3899+2.8996 \times x_1$. It fits worse than the model in (c) and (d) because its adjusted R-squared (0.1679) becomes smaller.
+
+The null hypothesis $H_0 : \beta_1 = 0$ can be rejected because the p-value for x2 is $1.37 \times 10^{-5}$ which is much less than $\alpha = 0.5$.
+
+
+##f)
+
+No, they do not contradict with each other. The fact that x2 is a significant predictor in (e) and not significant in (c) is because x2 and x1 are highly correlated. So it is hard for the linear model in (c) to determine which predictor is truly associated with the response, y.
+
+##g)
+
+```{r}
+x1=c(x1, 0.1)
+x2=c(x2, 0.8)
+y=c(y,6)
+modelc<-lm(y~x1+x2)
+modeld<-lm(y~x1)
+modele<-lm(y~x2)
+summary(modelc)
+par(mfrow=c(2,2))
+plot(modelc)
+```
+
+According to the output, when we fit the model in (c) with the new observation, $\hat{\beta_0}$ is about the same as it is in the modle in (c). $\hat{\beta_1}$ becomes much smaller and $\hat{\beta_2}$ becomes much larger. X1 becomes insignifiant since its p-value (0.36458) is much larger than $\alpha=0.05$. X2 becomes significant since its p-value (0.00614) is much smaller than $\alpha=0.05$.
+
+The new observation doesn't appear to be an outlier, because its residual is within (-3, 3) in the residuals vs fitted plot. However, since it has cook's distance (about 1) and high leverage value (0.4, higher than 0.04(=4/n=4/101)), it is a high-leverage point.
+
+
+```{r}
+summary(modeld)
+par(mfrow=c(2,2))
+plot(modeld)
+```
+
+According to the output, when we fit the model in (d) with the new observation, the new model stays pretty much similar to the one in (d) but has a lower multiple R-squred and adjusted R-squared.
+
+The new observation is an outlier, since the residula vs fitted plot shows that it has high residual (near 4). The new observation is not a high-leverage point, since its leverage value is less than 0.04 (= 4/n = 4/101).
+
+```{r}
+summary(modele)
+par(mfrow=c(2,2))
+plot(modele)
+```
+
+According to the output, when we fit the model in (e) with the new observation, the slop of x2 becomes slightly steeper than it is in the model in (e), the multiple R-squred and adjusted R-squred become lager which indicates a better fit.
+
+The new observation is not an outlier, since its residual is within (-3,3) in the residual vs fitted plot. Its leverage value (about 0.1) is slightly high (higher than 0.04 (= 4/n = 4/101)) in the residuals vs leverage plot, so it is considered to be a high-leverage point.
+
+
