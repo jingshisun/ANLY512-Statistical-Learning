@@ -1,0 +1,366 @@
+---
+title: "HW4"
+author: "Jingshi"
+date: "2/14/2017"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+##Question 6
+
+##a)
+$$\hat\Pr(Y=A|X_1,X_2)={\frac {e^{\hat\beta_0+\hat\beta _1x_1+\hat\beta_2x_2}}{1+e^{\hat\beta_0+\hat\beta_1x_1+\hat\beta_2x_2}}}={\frac {e^{-6+0.05\times x_1+1\times x_2}}{1+e^{-6+0.05 \times x_1+1 \times x_2}}}={\frac {e^{-6+0.05\times 40+1\times 3.5}}{1+e^{-6+0.05 \times 40+1 \times 3.5}}}$$
+Calculated in R:
+```{r}
+exp(-6+0.05*40+1*3.5)/(1+exp(-6+0.05*40+3.5))
+```
+As the output shows, the probability is 0.3775407.
+
+##b)
+When $\hat Pr(Y=A|X_2)= 0.5$, $odds = {\frac{\hat Pr(Y=A|X_2)}{1-\hat Pr(Y=A|X_2)}}={\frac{0.5}{1-0.5}}=1$. 
+
+$log\ odds = log\ 1 = 0 = -6+0.05 \times x_1+1 \times 3.5$
+
+$=>x_1=50$
+
+Therefore, the student needs to study 50 hours.
+
+
+##Question 10
+
+##a)
+
+```{r}
+library(ISLR)
+help(Weekly)
+summary(Weekly)
+pairs(Weekly)
+cor(Weekly[,1:8])
+#plot(Weekly$Volume~Weekly$Year)
+```
+
+According to the output, most of the variales have very small correlations (less than 0.1 or even close to zero). However, the correlation between Year and Volume is noticeably large (0.84194162). As you can see from the scatter plot matrix, there is a strong positive relationship (increasing trend) between Volume and Year.
+
+
+##b)
+
+```{r}
+model.fit<-glm(Direction ~ Lag1+Lag2+Lag3+Lag4+Lag5+Volume, data=Weekly, family=binomial)
+summary(model.fit)
+```
+
+According to the output, the only predictor that appears to be significant is lag2 because it has a p-value (0.0296) lower than $\alpha = 0.05$.  
+
+##c)
+
+```{r}
+model.predict<-predict(model.fit, type = "response")
+table(Weekly$Direction, model.predict>0.5)
+```
+
+According to the output, the overall fraction of correct predictions (accuracy) is $\frac{54+557}{54+48+430+557}=0.56107$. We have 48 false negative and 430 false positive (suppose Up is positive and Down is negative). The fraction of false positive is $\frac{430}{430+54}=0.88843$. The specificity is $\frac{54}{430+54}=0.11157$. The fraction of false negative is $\frac {48}{48+557}=0.07934$. The sensitivity is $\frac{557}{557+48}=0.92066$. The rate of missclassification = $\frac{48+430}{54+48+430+557}=0.43893$ which indicates that the model does not fit very well. 
+
+When the model guesses "up", it has a probability of `r 557/(430+557)` (=$\frac{557}{430+557}$) to be correct; when the model guesses "down",  it has a probability of `r 54/(54+48)` (=$\frac{54}{54+48}$) to be correct.
+
+##d)
+
+```{r}
+# fit the logistic regression model using a training data period from 1990 to 2008, 
+# with Lag2 as the only predictor.
+model.fit2<-glm(Direction~Lag2,data=Weekly[Weekly$Year<2009,],family = binomial)
+summary(model.fit2)
+# make predictions based on the held out data (the data from 2009 and 2010)
+model.predict2<-predict(model.fit2, Weekly[Weekly$Year>=2009,],type = "response")
+# compute the confusion matrix for the held out data (the data from 2009 and 2010).
+table(Weekly$Direction[Weekly$Year>=2009],model.predict2>0.5)
+```
+
+The overall fraction of correct predictions (accuracy) is $\frac{9+56}{9+34+5+56}=0.625$ which is higher than the previous model. Its sensitivity is $\frac{56}{5+56}=0.91803$. Its specificity is $\frac{9}{9+34}=0.20930$.
+
+##Question 13
+
+```{r}
+library(MASS)
+data(Boston)
+help(Boston)
+# convert numeric data into binominal: FALSE = 0 and TRUE = 1
+Boston$crim01 <- as.numeric(Boston$crim > median(Boston$crim))
+# fit a logistic regression with all predictors.
+boston.glm<-glm(crim01~. - crim01 -crim, data = Boston, family = binomial)
+summary(boston.glm)
+# get predictions
+glm.predict<-predict(boston.glm, type = "response")
+# compute the confusion matrix
+table(Boston$crim01, glm.predict>0.5)
+```
+
+According to the summary of the model, zn, nox, dis, rad, tax, ptratio, black and medv are statistically significant because their p-values are lower than $\alpha = 0.05$. 
+
+According to the confusion matrix, the rate of misclassification is $\frac{24+19}{24+19+234+229}=0.08498$. The accuracy is $\frac{229+234}{24+19+234+229}=0.91502$ which indicates a good fit. The sensitivity is $\frac{229}{24+229}=0.90514$. The specificity is $\frac{234}{19+234}=0.92490$.
+
+```{r}
+# now fit a logistic regression model with another set of predictors
+boston.glm<-glm(crim01~zn+nox+dis+rad+tax+ptratio+black+medv, data = Boston, family = binomial)
+summary(boston.glm)
+# get predictions
+glm.predict<-predict(boston.glm, type = "response")
+# compute the confusion matrix
+table(Boston$crim01, glm.predict>0.5)
+```
+
+According to the summary of the model, all the predictors are statistically significant because their p-values are all lower than $\alpha = 0.05$.
+
+According to the confusion matrix, the rate of misclassification is $\frac{30+24}{229+24+30+223}=0.10672$. The accuracy is $\frac{229+223}{229+24+30+223}=0.89328$ which indicates a good fit. The sensitivity is $\frac{223}{30+223}=0.88142$. The specificity is $\frac{229}{24+229}=0.90514$.
+
+```{r}
+# Now fit a LDA model
+#library(MASS)
+boston.lda<-lda(crim01~zn+nox+dis+rad+tax+ptratio+black+medv, data = Boston)
+# get predictions
+glm.predict<-predict(boston.lda, type = "response")
+# compute the confusion matrix for the lda model
+table(Boston$crim01, glm.predict$class)
+```
+
+According to the confusion matrix, the rate of misclassification is $\frac{59+6}{247+6+59+194}=0.12846$. The accuracy is $\frac{247+194}{247+6+59+194}=0.87154$ which indicates a good fit. The sensitivity is $\frac{194}{59+194}=0.76680$. The specificity is $\frac{247}{6+247}=0.97628$.
+
+```{r}
+# Fit a KNN model by first split data into training and testing set.
+set.seed(6)
+n <- rnorm(nrow(Boston))
+test <- n > quantile(n,0.80)
+train <- !test
+train.X <- cbind(Boston$zn, Boston$indus, Boston$chas)[train, ]
+test.X <- cbind(Boston$zn, Boston$indus, Boston$chas)[test, ]
+train.crim01 <- Boston$crim01[train]
+
+# Now fit a KNN model with k = 6
+library(class)
+boston.knn<-knn(train.X, test.X, train.crim01, k = 6)
+
+# compute the confusion matrix for the lda model
+table(boston.knn, Boston$crim01[test])
+
+```
+
+According to the confusion matrix, the rate of misclassification is $\frac{2+2}{44+2+2+53}=0.03960$. The accuracy is $\frac{44+53}{44+2+2+53}=0.96040$ which indicates a good fit. The sensitivity is $\frac{53}{2+53}=0.96364$. The specificity is $\frac{44}{2+44}=0.95652$.
+
+##Immage Classification Problem
+
+```{r}
+load("mnist_data.rdata")
+plot_digit <- function(j){
+arr784 <- as.numeric(images_df[j,1:784]) 
+col=gray(12:1/12)
+image(matrix(arr784, nrow=28)[,28:1], col=col,
+        main = paste("this is a ",images_df$labels[j]))
+}
+
+```
+
+##A.
+
+```{r}
+# Plot three 0's.
+plot_digit(39)
+plot_digit(49)
+plot_digit(58)
+```
+
+```{r}
+# Plot three 1's.
+plot_digit(32)
+plot_digit(35)
+plot_digit(36)
+```
+
+##B.
+
+##(i)
+
+```{r}
+# A function to check whether a pixel has a zero variability
+isZero<-function(j){
+  res = paste("True, pixel",j,"has a zero variability.")
+  for (i in 1 : 2115){
+    if (images_df[i,j]!=0){
+      res = paste("False, the variability of pixel",j,"is not zero.")
+      break
+    }
+  }
+  print(res)
+}
+
+# Test to see if pixel 1 has a zero variability.
+isZero(1)
+# Test to see if pixel 2 has a zero variability.
+isZero(2)
+# Test to see if pixel 3 has a zero variability.
+isZero(3)
+# Test to see if pixel 4 has a zero variability.
+isZero(4)
+# Test to see if pixel 5 has a zero variability.
+isZero(5)
+
+```
+
+According to the output, the five features are 1, 2, 3, 4 and 5.
+
+##(ii)
+
+```{r}
+# Test to see if pixel 100 has a zero variability.
+isZero(100)
+# Test to see if pixel 101 has a zero variability.
+isZero(101)
+# Test to see if pixel 102 has a zero variability.
+isZero(102)
+# Test to see if pixel 103 has a zero variability.
+isZero(103)
+# Test to see if pixel 104 has a zero variability.
+isZero(104)
+
+isZero(109)
+```
+
+According to the output, the five features are 100, 101, 102, 103 and 104.
+
+##(iii)
+
+```{r}
+# The two features I pick are 100 and 101.
+plot(images_df$X100,images_df$X101,col=ifelse(images_df$labels==1, "green", "grey"), 
+     main = "Scatter Plot of Feature 101 against 100")
+legend(0, 250,pch=c(1,1), col=c("green", "grey"), c("--1", "--0"),cex=.6)
+
+```
+
+##C.
+
+```{r}
+#install.packages("pROC")
+library(pROC)
+# The three pairs that I choose are 100 & 101, 101 & 102, 102 & 103
+
+# firstly, fit a logistic regression of labels~X100+X101
+c.glm1<-glm(labels~X100+X101, data = images_df, family = binomial)
+# take a look at the summary
+summary(c.glm1)
+
+# get predictions
+glm.predict<-predict(c.glm1, type = "response")
+
+# compute the confusion matrix
+table(images_df$labels, glm.predict>0.5)
+
+# compute roc
+roc<-roc(images_df$labels, glm.predict)
+
+# comput AUC
+auc(roc)
+```
+
+According to the summary of the model, the intercept and X101 are statistically significant because their p-values ($2.99\times 10^{-5}$ and 0.00553 separately) are less than $\alpha = 0.05$. The p-value of X100 is 0.20076 which is much larger than $\alpha = 0.05$ so that X100 is not statistically significant.
+
+According to the confusion matrix, there are 9 false negatives and 935 false positives. The rate of missclassification is $\frac{935+9}{935+9+45+1126}=0.44634$. The accuracy is $\frac{45+1126}{935+9+45+1126}=0.55366$. The sensitivity is $\frac{1126}{1126+9}=0.99207$. The specificity is $\frac{45}{935+45}=0.04592$.
+
+The AUC is 0.5192.
+
+```{r}
+# secondly, fit a logistic regression of labels~X101+X102
+c.glm2<-glm(labels~X101+X102, data = images_df, family = binomial)
+# take a look at the summary
+summary(c.glm2)
+
+# get predictions
+glm.predict<-predict(c.glm2, type = "response")
+
+# compute the confusion matrix
+table(images_df$labels, glm.predict>0.5)
+
+# compute roc
+roc<-roc(images_df$labels, glm.predict)
+
+# comput AUC
+auc(roc)
+```
+
+According to the summary of the model, the intercept and X101 are statistically significant because their p-values ($4.32\times 10^{-5}$ and 0.00269 separately) are less than $\alpha = 0.05$. The p-value of X102 is 0.79261 which is much larger than $\alpha = 0.05$ so that X102 is not statistically significant. 
+
+According to the confusion matrix, there are 4 false negatives and 940 false positives. The rate of missclassification is $\frac{940+4}{940+4+40+1131}=0.44634$. The accuracy is $\frac{40+1131}{940+4+40+1131}=0.55366$. The sensitivity is $\frac{1131}{1131+4}=0.99648$. The specificity is $\frac{40}{940+40}=0.04082$.
+
+The AUC is 0.5182.
+
+
+
+
+```{r}
+# thirdly, fit a logistic regression of labels~X102+X103
+c.glm3<-glm(labels~X102+X103, data = images_df, family = binomial)
+# take a look at the summary
+summary(c.glm3)
+
+# get predictions
+glm.predict<-predict(c.glm3, type = "response")
+
+# compute the confusion matrix
+table(images_df$labels, glm.predict>0.5)
+
+# compute roc
+roc<-roc(images_df$labels, glm.predict)
+
+# comput AUC
+auc(roc)
+```
+
+
+According to the summary of the model, the intercept and X102 are statistically significant because their p-values ($8.39\times 10^{-5}$ and 0.00375 separately) are less than $\alpha = 0.05$. The p-value of X103 is 0.58096 which is much larger than $\alpha = 0.05$ so that X103 is not statistically significant. 
+
+According to the confusion matrix, there are 9 false negatives and 942 false positives. The rate of missclassification is $\frac{942+9}{942+9+38+1126}=0.44965$. The accuracy is $\frac{38+1126}{942+9+38+1126}=0.55035$. The sensitivity is $\frac{1126}{1126+9}=0.99207$. The specificity is $\frac{38}{942+38}=0.03878$.
+
+The AUC is 0.5155.
+
+Among the three models the best model is the first model (c.glm1) because it has the lowest rate of misssclassification (0.44634) and the highest AUC value (0.5192). 
+
+##D.
+
+```{r}
+# fit a logistic regression of labels~X100+X101+X102+X103+X104
+c.glm3<-glm(labels~X100+X101+X102+X103+X104,data=images_df, family = binomial)
+
+# get predictions
+glm.predict<-predict(c.glm3, type = "response")
+
+# compute the confusion matrix
+table(images_df$labels, glm.predict>0.5)
+
+# compute roc
+roc<-roc(images_df$labels, glm.predict)
+
+# comput AUC
+auc(roc)
+```
+
+According to the confusion matrix, there are 12 false negatives and 928 false positives. The rate of missclassification is $\frac{928+12}{928+12+52+1123}=0.44444$ which is lower than the best model in C. Additionally, the accuracy is $\frac{52+1123}{928+12+52+1123}=0.55556$ which is better than the best model in C. The sensitivity is $\frac{1123}{1123+12}=0.98943$. The specificity is $\frac{52}{928+52}=0.05306$.
+
+The AUC is 0.5228 which is also better than the best model in C.
+
+##E.
+
+```{r}
+# fit a logistic regression with all features
+e.glm<-glm(labels~., data = images_df, family = binomial)
+# take a look at the long summary
+summary(e.glm)
+
+```
+
+The message "glm.fit: algorithm did not convergeglm.fit: fitted probabilities numerically 0 or 1 occurred" implies numerical problems which is caused by too many features or explanatory variables.
+
+The estimated coefficients and standard errors of some features are NA's such as X1, X20, X10 and so on. This is due to that they have zero variability (so they are not important to the model). Meanwhile, other features have very small estimate coefficients, very large standard errors and p-values of 1 (so they are not statistically significant) such as X100, X109, X69 and so on. The approach fails because we can't choose all variables, we have to prune or eliminate those with variability of 0.
+
+
+
