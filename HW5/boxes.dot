@@ -1,0 +1,43 @@
+digraph G {
+
+        rankdir=LR
+	splines=line
+        
+        node [fixedsize=true, label=""];
+
+        subgraph cluster_0 {
+		color=white;
+		node [style=solid,color=blue4, shape=circle];
+		x1[label="x1"] x2[label="x2"] x3[label="1"];
+		label = "layer 1 (Input layer)";
+	}
+
+	subgraph cluster_1 {
+		color=white;
+		node [style=solid,color=red2];
+		a12[label="1", shape=circle]  a22[label="h1", shape=square] a32[label="h2", shape=square];
+		label = "layer 2 (hidden layer)";
+	}
+
+	subgraph cluster_2 {
+		color=white;
+		node [style=solid,color=seagreen2, shape=square];
+		O [label="z"];
+		label="layer 3 (output layer)";
+	}
+
+       
+        x3 -> a22[taillabel="1.27",labelfloat=tru,labelfontsize=8,labelangle=30];
+        x3 -> a32[taillabel="-32.11",labelfloat=true,labelfontsize=8,labelangle=-45];
+       
+        x1 -> a22[taillabel="0.23",labelfloat=true,labelfontsize=8,labelangle=30];
+        x1 -> a32[taillabel="21.98",labelfloat=true,labelfontsize=8,labelangle=-45];
+       
+        x2 -> a22[taillabel="-0.34",labelfloat=true,labelfontsize=8,labelangle=20];
+        x2 -> a32[taillabel="-48.67",labelfloat=true,labelfontsize=8];
+
+	a12 -> O[taillabel="-28.67",labelfloat=true,labelfontsize=8];
+        a22 -> O[taillabel="43.01",labelfloat=true,labelfontsize=8];
+        a32 -> O[taillabel="1.37",labelfloat=true,labelfontsize=8];
+
+}

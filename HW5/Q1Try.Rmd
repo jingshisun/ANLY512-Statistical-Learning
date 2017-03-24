@@ -1,0 +1,47 @@
+---
+title: "HW5"
+author: "Jingshi"
+date: "2/24/2017"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+##Question 1 
+
+##a)
+
+```{r}
+install.packages("(NeuralNetTools")
+library(nnet)
+library(NeuralNetTools)
+library(source_url('https://gist.githubusercontent.com/fawda123/7471137/raw/466c1474d0a505ff044412703516c34f1a4684a5/nnet_plot_update.r'))
+ 
+install.packages("devtools")
+library(devtools)
+source_url('https://gist.githubusercontent.com/fawda123/7471137/raw/466c1474d0a505ff044412703516c34f1a4684a5/nnet_plot_update.r')
+ 
+
+install.packages("reshape")
+library(scales)
+mod.in<-c(13.12,1.49,0.16,-0.11,-0.19,-0.16,0.56,-0.52,0.81)
+struct<-c(2,2,1) #two inputs, two hidden, one output 
+plot.nnet(mod.in,struct=struct)
+
+
+library(nnet)
+seed.val<-2
+set.seed(seed.val)
+rand.vars<-mvrnorm(num.obs,rep(0,num.vars),Sigma=cov.mat)
+rand.vars<-data.frame(rand.vars)
+mod1<-nnet(rand.vars,resp,data=dat.in,size=10,linout=T)
+
+install.packages("DiagrammeR")
+library(DiagrammeR)
+set.seed(1)
+grViz("boxes.dot")
+```
+

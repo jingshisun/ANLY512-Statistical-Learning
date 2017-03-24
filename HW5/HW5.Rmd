@@ -1,0 +1,495 @@
+---
+title: "HW5"
+author: "Jingshi"
+date: "2/24/2017"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+##Question 1
+
+##a)
+
+```{r}
+#install.packages("DiagrammeR")
+library(DiagrammeR)
+set.seed(1)
+grViz("boxes.dot")
+```
+
+Note: Square means tanh() activation function. 
+
+
+##b)
+
+$$h_1=tanh(1.27+0.23\times x_1-0.34\times x_2)$$
+
+##c)
+
+$$z=tanh(-28.67+43.01\times h_1+1.37\times h_2)$$
+
+##d)
+
+$$z=tanh(-28.67+43.01\times tanh(1.27+0.23\times x_1-0.34\times x_2)+1.37\times tanh(-32.11+21.98\times x1-48.67\times x_2))$$
+
+##Question 2
+
+##a)
+
+```{r}
+library(nnet)
+set.seed(1234)
+Advertising <- read.csv("Advertising.csv")
+
+lm_fit <-lm(Sales ~ TV + Radio + Newspaper, data=Advertising) 
+set.seed(1234)
+linear_fit <- nnet(Sales ~ TV + Radio + Newspaper,
+                   size = 0,  data=Advertising, skip = T,
+                   trace = F,maxit = 1000, linout = T)
+
+summary(linear_fit)
+summary(lm_fit)
+
+```
+
+
+According to the output of summaries, two models have the same coefficients: $$ \beta_0=2.94,\ \beta_1=0.05,\ \beta_2=0.19,\ \beta_3=0.00$$ So they are essentially the same models. Theoratically, they should be the same because a neural network without hidden layer and with linear output is a linear regression. 
+
+##b)
+
+```{r}
+#anova(lm_fit)
+# Calculate the SSE
+sum(lm_fit$residuals^2)
+sum(linear_fit$residuals^2)
+
+```
+
+According to the output, the SSE is 556.8253.
+
+##c)
+
+```{r}
+# Make a neural network that fits Sales to the predictors with a 3 unit hidden layer.
+set.seed(1234)
+nnet_fit <- nnet(Sales ~ TV + Radio + Newspaper,
+                   size = 3,  data=Advertising,
+                   trace = F,maxit = 1000, linout = T)
+
+#summary(nnet_fit)
+# Calculate the SSE
+sum(nnet_fit$residuals^2)
+
+```
+According to the output, the SSE is 5417.149.
+
+##d)
+
+```{r}
+Advert2 <- as.data.frame(scale(Advertising)) 
+Advert2$Sales <- Advertising$Sales
+head(Advert2)
+head(Advertising)
+
+```
+
+According to the output, values of all variables except Sales are changed. The changed values are reduced into a much smaller scale (most are between -2 to 2).
+
+##e)
+
+```{r}
+# Make a linear model that fits Sales to the scaled predictors in Advert2, using nnet() as in (a).
+set.seed(1234)
+linear_fit2 <- nnet(Sales ~ TV + Radio + Newspaper,
+                   size = 0,  data=Advert2, skip = T,
+                   trace = F,maxit = 1000, linout = T)
+summary(linear_fit2)
+
+```
+
+This model has exactly the same responses (Sales) as the linear model in (a) because the Sales in Advert2 and Advertising are the same.
+
+```{r}
+# Make a neural network that fits Sales to the scaled predictors in Advert2 with a 3 unit hidden layer.
+set.seed(1234)
+nnet_fit2 <- nnet(Sales ~ TV + Radio + Newspaper,
+                   size = 3,  data=Advert2,
+                   trace = F,maxit = 1000, linout = T)
+
+
+```
+
+##f)
+```{r}
+# Compute the SSE for the neural network with 3 units that was made in (e)
+# Calculate the SSE
+sum(nnet_fit2$residuals^2)
+
+```
+
+According to the output, the SSE (20.85593) of nnet_fit2 decreased, compared with the SSE (556.8253) of the linear model that was made in (a) and to the SSE (5417.149) of the neural network mdel that was made in
+(c), because the predictors are reduced into a much smaller scale in the model.
+
+##Question 3
+
+```{r}
+load("mnist_data.rdata")
+library(pROC)
+
+```
+
+
+##a)
+
+```{r}
+# A function to check whether a pixel has a zero variability
+isZero<-function(j){
+  res = paste("True, pixel",j,"has a zero variability.")
+  for (i in 1 : 2115){
+    if (images_df[i,j]!=0){
+      res = paste("False, the variability of pixel",j,"is not zero.")
+      break
+    }
+  }
+  print(res)
+}
+# Test to see if pixel 100 has a zero variability.
+isZero(100)
+# Test to see if pixel 101 has a zero variability.
+isZero(101)
+
+```
+
+The two variables I choose are feature 100 and 101. They have been verified to have non-zero variability. 
+```{r}
+# Fit a logistic regression model with these two features.
+model.a<-glm(labels~X100+X101, data = images_df, family = binomial)
+summary(model.a)
+# get predictions
+a.predict<-predict(model.a, type = "response")
+
+
+# compute roc
+roc<-roc(images_df$labels, a.predict)
+
+# comput AUC
+auc(roc)
+
+```
+
+The AUC is 0.5192 which is greater than 0.5. So the model is ok.
+
+##b)
+
+```{r}
+# Create a neural net with one unit in the hidden layer.
+set.seed(1234)
+model.b <- nnet(labels~X100+X101,
+                   size = 1,  data=images_df,
+                   trace = F,maxit = 1000, linout = T)
+summary(model.b)
+# get predictions
+b.predict<-predict(model.b, type = "raw")
+
+
+# compute roc
+roc<-roc(images_df$labels, b.predict)
+
+# comput AUC
+auc(roc)
+
+```
+
+The AUC is 0.5191 which is greater than 0.5 and slightly lower than the previous model. The model is ok.
+
+##c)
+
+```{r}
+#Create a neural net with three unit in the hidden layer.
+set.seed(1234)
+model.c <- nnet(labels~X100+X101,
+                   size = 3,  data=images_df,
+                   trace = F,maxit = 1000, linout = T)
+#summary(model.c)
+
+# get predictions
+c.predict<-predict(model.c, type = "raw")
+
+
+# compute roc
+roc<-roc(images_df$labels, c.predict)
+
+# comput AUC
+auc(roc)
+```
+The AUC is 0.5212 which is greater than 0.5 and higher than the previous two models. The model is better.
+
+##d)
+
+```{r}
+# Fistly, I would like to find out more features with non-zero variability
+# besides 100 and 101.
+# Test to see if pixel 102 has a zero variability.
+isZero(102)
+# Test to see if pixel 103 has a zero variability.
+isZero(103)
+# Test to see if pixel 104 has a zero variability.
+isZero(104)
+# Test to see if pixel 105 has a zero variability.
+isZero(105)
+# Test to see if pixel 106 has a zero variability.
+isZero(106)
+# Test to see if pixel 107 has a zero variability.
+isZero(107)
+# Test to see if pixel 108 has a zero variability.
+isZero(108)
+# Test to see if pixel 150 has a zero variability.
+isZero(150)
+# Test to see if pixel 151 has a zero variability.
+isZero(151)
+# Test to see if pixel 152 has a zero variability.
+isZero(152)
+
+```
+
+It turns out that all the above features have non-zero variability.
+
+```{r}
+# Now, create a neural net with four features (X100, X101, X102, X103) 
+# and 166 units in the hidden layer.
+set.seed(1234)
+model.d1 <- nnet(labels~X100+X101+X102+X103,
+                   size = 166,  data=images_df,
+                   trace = F,maxit = 1000, linout = T)
+#summary(model.d1)
+
+# get predictions
+d.predict<-predict(model.d1, type = "raw")
+
+
+# compute roc
+roc<-roc(images_df$labels, d.predict)
+
+# comput AUC
+auc(roc)
+
+```
+
+
+
+
+```{r}
+# Create a neural net with five features 
+# (X100, X101, X102, X103, X104) 
+# and 142 units in the hidden layer.
+set.seed(1234)
+model.d2 <- nnet(labels~X100+X101+X102+X103+X104,
+                   size = 142,  data=images_df,
+                   trace = F,maxit = 1000, linout = T)
+#summary(model.d2)
+
+# get predictions
+d.predict<-predict(model.d2, type = "raw")
+
+# compute roc
+roc<-roc(images_df$labels, d.predict)
+
+# comput AUC
+auc(roc)
+
+```
+
+As the number of units increase from 9 to 142, the AUC (0.5338) increases. Thus, this model is even better than the previous models.
+
+```{r}
+# Create a neural net with six features 
+# (X100, X101, X102, X103, X104, X105) 
+# and 124 units in the hidden layer.
+set.seed(1234)
+model.d3 <- nnet(labels~X100+X101+X102+X103+X104+X105,
+                   size = 124,  data=images_df,
+                   trace = F,maxit = 1000, linout = T)
+#summary(model.d3)
+
+# get predictions
+d.predict<-predict(model.d3, type = "raw")
+
+# compute roc
+roc<-roc(images_df$labels, d.predict)
+
+# comput AUC
+auc(roc)
+
+```
+
+
+```{r}
+# Create a neural net with seven features 
+# (X100, X101, X102, X103, X104, X105, X106) 
+# and 111 units in the hidden layer.
+set.seed(1234)
+model.d4 <- nnet(labels~X100+X101+X102+X103+X104+X105+X106,
+                   size = 111,  data=images_df,
+                   trace = F,maxit = 1000, linout = T)
+#summary(model.d4)
+
+# get predictions
+d.predict<-predict(model.d4, type = "raw")
+
+# compute roc
+roc<-roc(images_df$labels, d.predict)
+
+# comput AUC
+auc(roc)
+
+```
+
+```{r}
+# Create a neural net with eight features 
+# (X100, X101, X102, X103, X104, X105, X106, X107) 
+# and 99 units in the hidden layer.
+set.seed(1234)
+model.d5 <- nnet(labels~X100+X101+X102+X103+X104+X105+X106+X107,
+                   size = 99,  data=images_df,
+                   trace = F,maxit = 1000, linout = T)
+#summary(model.d5)
+
+# get predictions
+d.predict<-predict(model.d5, type = "raw")
+
+# compute roc
+roc<-roc(images_df$labels, d.predict)
+
+# comput AUC
+auc(roc)
+
+```
+
+
+```{r}
+# Create a neural net with 9 features 
+# (X100, X101, X102, X103, X104, X105, X106, X107, X108) 
+# and 90 units in the hidden layer.
+set.seed(1234)
+model.d6 <- nnet(labels~X100+X101+X102+X103+X104+X105+X106+X107+X108,
+                   size = 90,  data=images_df,
+                   trace = F,maxit = 1000, linout = T)
+#summary(model.d6)
+
+# get predictions
+d.predict<-predict(model.d6, type = "raw")
+
+# compute roc
+roc<-roc(images_df$labels, d.predict)
+
+# comput AUC
+auc(roc)
+
+```
+
+
+```{r}
+# Create a neural net with 12 features 
+# (X100, X101, X102, X103, X104, X105, X106, X107, X108, X150, X151, X152) 
+# and 71 units in the hidden layer.
+set.seed(1234)
+model.d7 <- nnet(labels~X100+X101+X102+X103+X104+X105+X106+X107+X108+X150+X151+X152,
+                   size = 71,  data=images_df,
+                   trace = F,maxit = 1000, linout = T)
+#summary(model.d7)
+
+# get predictions
+d.predict<-predict(model.d7, type = "raw")
+
+# compute roc
+roc<-roc(images_df$labels, d.predict)
+
+# comput AUC
+auc(roc)
+
+```
+
+Features with non-zero variability                                            | Hidden Units  | AUC
+----------------------------------------------------------------------------- | ------------- | ------
+X100, X101, X102, X103                                                        | 166           | 0.5323
+X100, X101, X102, X103, X104                                                  | 142           | 0.5338
+X100, X101, X102, X103, X104, X105                                            | 124           | 0.5343
+X100, X101, X102, X103, X104, X105, X106                                      | 111           | 0.5353
+X100, X101, X102, X103, X104, X105, X106, X107                                | 99            | 0.5358
+X100, X101, X102, X103, X104, X105, X106, X107, X108                          | 90            | 0.5358
+X100, X101, X102, X103, X104, X105, X106, X107, X108, X150, X151, X152        | 71            | 0.6795
+
+
+
+According to the outputs of AUC scores and the above summarized table, as the number of features with non-zero variability increases, the highest number of hidden units that I can use for neural network model decreases and AUC increases. This implies that using more features with non-zero variability can improve the model by increasing its AUC. Interestingly, when features X150, X151 and X152 added, AUC increase more than 0.1 which is noticeably large. This is probably because X150, X151, X152 are in a different cluster than the previous features.
+
+##Question 4
+
+```{r}
+set.seed(20305)
+mydf <- data.frame(matrix(rnorm(1100), ncol = 11, nrow = 100))
+
+```
+
+##a)
+
+```{r}
+# Fit z to the other 10 columns using multiple regression.
+modela<-lm(X11~., data = mydf)
+#summary(model)
+sum(modela$residuals^2)
+```
+
+The sum of squares of the residuals is 98.80704.
+
+##b)
+
+```{r}
+# Fit z to the other 10 columns, using a neural network with two 
+# hidden units and setting maxit = 2000 and decay = .01.
+set.seed(20305)
+modelb <- nnet(X11~.,size = 2,  data=mydf,
+                   trace = F,maxit = 2000,decay = .01, linout = T)
+sum(modelb$residuals^2)
+```
+
+This model fits better because it has a lower sum of residuals (66.9531) value than the previous model's (98.80704).
+
+##c)
+
+```{r}
+# Fit z to the other 10 columns, using a neural network with 5 
+# hidden units and setting maxit = 2000 and decay = .01.
+set.seed(20305)
+modelc1 <- nnet(X11~.,size = 5,  data=mydf,
+                   trace = F,maxit = 2000,decay = .01, linout = T)
+sum(modelc1$residuals^2)
+```
+
+The sum of squares of the residuals is 12.8106.
+
+```{r}
+# Fit z to the other 10 columns, using a neural network with 10 
+# hidden units and setting maxit = 2000 and decay = .01.
+set.seed(20305)
+modelc2 <- nnet(X11~.,size = 10,  data=mydf,
+                   trace = F,maxit = 2000,decay = .01, linout = T)
+sum(modelc2$residuals^2)
+```
+
+The sum of squares of the residuals is 0.07445059.
+
+
+
+Hidden Units |Sum of squares of the residuals
+------------ |--------------------------------
+2            |66.9531        
+5            |12.8106
+10           |0.07445059
+
+According to the output of sum of squared of the residuals and the above summarized table, as the number of hidden units increases, the sum of squares of the residuals decrease. This implies that the model fits better when the number of hidden units increase.
