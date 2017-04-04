@@ -1,0 +1,296 @@
+---
+title: "HW8"
+author: "Jingshi"
+date: "4/2/2017"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+##7.9 #2
+
+##a)
+
+When $\lambda$ (the smoothing factor) is extremely large and m = 0, $g^{(0)}$ (which equals to g) is forced to converge to 0. Therefore, $\hat {g}=0$.
+
+##b)
+
+When $\lambda$ (the smoothing factor) is extremely large and m = 1, $g^{(1)}$ (which is the first derivative of g) is forced to converge to 0. Therefore, $\hat {g}=c$ where c stands for a constant. For example, $\hat {g}=9$.
+
+##c)
+
+When $\lambda$ (the smoothing factor) is extremely large and m = 2, $g^{(2)}$ (which is the second derivative of g) is forced to converge to 0. Therefore, $\hat {g}=a\times x+b$ where a and b are both stands for constants. For example, $\hat {g}=9\times x + 3$.
+
+##7.9 #6
+
+##b)
+
+```{r}
+library(boot)
+library(ISLR)
+#head(Wage)
+
+# perform cross-validation to choose the optimal number of cuts
+set.seed(6)
+# Divide into 2 to 15 cuts
+cross.validation <- rep(NA, 15)
+for (i in 2:15) {
+    Wage$cut <- cut(Wage$age, i)
+    fit <- glm(wage ~ cut, data = Wage)
+    # 12 fold cross validation
+    cross.validation[i] <- cv.glm(Wage, fit, K = 12)$delta[1]
+}
+plot(2:15, cross.validation[-1], xlab = "Number of Cuts", ylab = "Testing MSE", type = "o")
+points(which.min(cross.validation), cross.validation[which.min(cross.validation)], col = "green", 
+       pch = 1, cex = 2)
+
+```
+
+As the above plot shows, when number of cuts is 11, the testing mean squared error is the lowerst among the other cuts. Thus, the optimal number of cuts is 11.
+ 
+```{r}
+# fit a step function
+model.step <- glm(wage ~ cut(age, 11), data = Wage)
+# take a look at the summary
+summary(model.step)
+
+# preperaton for the plot
+seq.age <- seq(from = range(Wage$age)[1], to = range(Wage$age)[2])
+prediction <- predict(model.step, list(age = seq.age))
+
+# make a plot of the fit obtained.
+plot(Wage$wage ~ Wage$age)
+lines(seq.age, prediction, col = "green", lwd = 3)
+```
+
+
+##7.9 #9
+
+##a)
+```{r}
+library(MASS)
+# use the poly() function to fit a cubic polynomial regression to predict nox using dis.
+model.poly <- lm(nox ~ poly(dis, 3), data = Boston)
+# report the regression output.
+summary(model.poly)
+# plot the resulting data. 
+plot(Boston$nox ~ Boston$dis)
+# Plot the polynomial fits.
+seq.dis <- seq(from = range(Boston$dis)[1], to = range(Boston$dis)[2], by = 0.01)
+prediction <- predict(model.poly, data.frame(dis=seq.dis))
+lines(seq.dis, prediction, col = "green", lwd = 3)
+```
+
+
+
+##b)
+
+```{r}
+library(data.table)
+# create a vector with 10 elements in order to record residual sum of squares 
+# for each one of the 10 polynomial degrees.
+myRss <- rep(NA, 10)
+# fit 10 polynomial models and record their associated residual sum of squares.
+
+for (i in 1:10) {
+    # fit a polynomial model.
+    model.poly <- lm(nox ~ poly(dis, i), data = Boston)
+    # plot the polynomial fit
+    plot(Boston$nox ~ Boston$dis, main=paste("Polynomial Degree: ", i))
+    seq.dis <- seq(from = range(Boston$dis)[1], to = range(Boston$dis)[2], by = 0.01)
+    prediction <- predict(model.poly, data.frame(dis=seq.dis))
+    lines(seq.dis, prediction, col = "green", lwd = 3)
+    # record the associated residual sum of squares.
+    myRss[i] <- sum(model.poly$residuals^2)
+}
+# report the RSS's by ploting them out.
+plot(1:10, myRss, xlab = "Polynomial Degrees", ylab = "Residual Sum of Squares", type = "o")
+RSS<-myRss
+# create a table
+myTable<-data.table(RSS)
+# take a look at the table
+myTable[, Polynomial_Degree := .GRP, by = list(c(1,2,3,4,5,6,7,8,9,10))]
+
+
+
+```
+
+
+Acording to the above table and the plots of RSS show, as the polynomial degree increase, RSS decrease. When polymomial degree is 10, the RSS is the smallest.
+
+##c)
+
+```{r}
+set.seed(6)
+library(boot)
+# perform cross-validation for polymomial degrees from 1 to 10.
+testMSE <- rep(NA, 10)
+for (i in 1:10) {
+    model.poly <- glm(nox ~ poly(dis, i), data = Boston)
+    testMSE[i] <- cv.glm(Boston, model.poly, K = 12)$delta[1]
+}
+plot(1:10, testMSE, xlab = "Polymonial Degree", ylab = "Test Mean Squared Error", type = "o")
+points(which.min(testMSE), testMSE[which.min(testMSE)], col = "green", 
+       pch = 1, cex = 2)
+```
+
+As you can see from the above plot, the test mean squared error is minimized when polymomial degree is 4. Therefore, the optimal degree for the polynomial is 4.
+
+## 7.9 #9
+
+## d)
+
+```{r}
+library(splines)
+# fit a regression spline
+model.lm <- lm(nox ~ bs(dis, df=4), data = Boston)
+#bs(Boston$dis, df=4)
+# Report the output for the fit
+summary(model.lm)
+# preparation for the below plot
+prediction <- predict(model.lm, data.frame(dis = seq.dis))
+# Plot the resulting fit.
+plot(Boston$nox ~ Boston$dis)
+lines(seq.dis, prediction, col = "green", lwd = 3)
+
+
+
+
+```
+
+I choose the knots based on df = 4. Thus the knots are 1.296, 3.20745 and 12.1265 (this is obtained from bs(Boston$dis, df=4) and the output is too long to show here), each term in the fitted model are significant since their p-values are much smaller than alpha=0.05. Moreover, the model's adjusted R-squred is high at 0.71.
+
+##e)
+
+```{r}
+myRss <- rep(NA, 20)
+for (i in 3:20) {
+    model.lm <- lm(nox ~ bs(dis, df = i), data = Boston)
+    # plot the fit
+    plot(Boston$nox ~ Boston$dis, main=paste("Degree of Freedom: ", i))
+    seq.dis <- seq(from = range(Boston$dis)[1], to = range(Boston$dis)[2], by = 0.01)
+    prediction <- predict(model.lm, data.frame(dis=seq.dis))
+    lines(seq.dis, prediction, col = "green", lwd = 3)
+    myRss[i] <- sum(model.lm$residuals^2)
+}
+plot(3:20, myRss[-c(1, 2)], xlab = "Degrees of freedom", ylab = "Residual Sum Squares", type = "o")
+RSS<-myRss
+# create a table
+myTable<-data.table(RSS)
+# take a look at the table
+myTable[, Degree_of_Freedom := .GRP, by = list(c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20))]
+```
+
+
+As the output shows, the RSS decrease generally as degrees of freedom increase. Although there are some fluctuations (for instance, from 10 degrees of freedom to 11 degrees of freedom, there is a slightly increase in RSS), the general trend of RSS value is decreasing.
+
+## 7.9 #10
+
+##a)
+
+```{r}
+library(leaps)
+set.seed(2441)
+attach(College)
+# Record the total number of predictors.
+n=length(College[1,])-1
+# Use a 70-30 split into training and test data.
+data.train <- sample(length(Outstate), length(Outstate) *0.7)
+mytest <- College[-data.train, ]
+mytrain <- College[data.train, ]
+# perform forward stepwise selection on the training set.
+model <- regsubsets(Outstate ~ ., data = mytrain, nvmax = n, method = "forward")
+# record the summary of the model.
+mysummary <- summary(model)
+par(mfrow = c(1, 3))
+# Plot Adjusted R-squared vs # of variables.
+plot(mysummary$adjr2, xlab = "# of variables", ylab = "Adjusted R-squared", type = "o")
+# plot the maximum point.
+points(which.max(mysummary$adjr2), mysummary$adjr2[which.max(mysummary$adjr2)], col = "green", 
+       pch = 1, cex = 2)
+# +/- 0.1 standard devitations of the maximum point.
+abline(h = max(mysummary$adjr2)+ 0.1 * sd(mysummary$adjr2), lty = 3, col = "purple")
+abline(h = max(mysummary$adjr2) - 0.1 * sd(mysummary$adjr2), lty = 3, col = "purple")
+# Plot BIC vs # of variables.
+plot(mysummary$bic, xlab = "# of variables", ylab = "BIC", type='o')
+# plot the minimum point.
+points(which.min(mysummary$bic), mysummary$bic[which.min(mysummary$bic)], col = "green", 
+       pch = 1, cex = 2)
+# +/- 0.1 standard devitations of the minimum point.
+abline(h = min(mysummary$bic) + 0.1 * sd(mysummary$bic), lty = 3, col = "purple")
+abline(h = min(mysummary$bic) - 0.1 * sd(mysummary$bic), lty = 3, col = "purple")
+# Plot Cp vs # of variables.
+plot(mysummary$cp, xlab = "# of variables", ylab = "C_p", type = "o")
+# plot the minimum point.
+points(which.min(mysummary$cp), mysummary$cp[which.min(mysummary$cp)], col = "green", 
+       pch = 1, cex = 2)
+# +/- 0.1 standard devitations of the minimum point.
+abline(h = min(mysummary$cp) + 0.1 *sd(mysummary$cp), lty = 3, col = "purple")
+abline(h = min(mysummary$cp) - 0.1 *sd(mysummary$cp), lty = 3, col = "purple")
+
+
+```
+
+As the output shows, adjusted R-squared achieved its highest at 15 variables, BIC achieved its lowest at 7 variables, Cp achieved its lowest at 14 variables. Theses are optimal number of variables for each of the  criterion. However, they are different. Thus, I choose 11 variables model as the satisfactory model that uses just a subset of the predictors because this model's Adjusted R-squared, BIC and Cp are within 0.1 standard deviation of their optimal values of each of the three criterion.
+
+```{r}
+# Take a look at the predictors that are selected from 11 variables model.
+names(coef(model, id = 11))
+```
+
+
+
+##b)
+
+```{r}
+#install.packages("gam")
+library(gam)
+model <- gam(Outstate ~ Private + s(Apps, df = 5)+ s(Accept, df = 5) + s(Top25perc, df = 5) + 
+               s(Room.Board, df = 5) + s(Personal, df = 5) + s(PhD, df = 5)+ s(S.F.Ratio, df=5)
+             +s(perc.alumni, df=5)+s(Expend, df=5)+s(Grad.Rate, df=5), data=mytrain)
+par(mfrow = c(1, 3))
+plot(model, se = T, col = "red")
+```
+
+As the output shows, holding other variables constant, when 'Private' is yes, outstate tuision is high compared to when 'Private' is no.
+Holding other variables constant, when 'Apps' increase, outstate tuision decrease generally but fluctuate slightly in the middle.
+Holding other variables constant, when 'Accept' increase, outstate tuision increases in general.
+Holding other variables constant, when 'Top25perc' increase, outstate tuision increase moderately in general but fluctuate in the middle.
+Holding other variables constant, when 'Room Board' increase, outstate tuision increase in general.
+Holding other variables constant, when 'Personal' increase, outstate tuision decrease in general but fluctuate in the middle.
+Holding other variables constant, when 'PhD' increase, outstate tuision increase in general but fluctuate in the middle.
+Holding other variables constant, when 'S.F.Ratio' increase, outstate tuision increase in general but fluctuate in the middle.
+Holding other variables constant, when 'perc alumni' increase, outstate tuision increase in general.
+Holding other variables constant, when 'Expend' increase, outstate tuision increase at first then followed by a decresing.
+Holding other variables constant, when 'Grad Rate' increase, outstate tuision increase in general but fluctuate slightly in the middle.
+
+
+
+
+##c)
+
+```{r}
+# Calculate root mean squared of 11 predictors GAM model.
+prediction <- predict(model, mytest)
+error<-mean((mytest$Outstate - prediction)^2)
+rms<- sqrt(mean((mytest$Outstate - prediction)^2))
+cat("Root Mean Squared of 11 predictors GAM model:", rms)
+# Calculate root mean squared of standard linear model with all predictors included. 
+model.lm<-lm(Outstate ~., data=mytrain)
+prediction.lm <- predict(model.lm, mytest)
+rms.lm<- sqrt(mean((mytest$Outstate - prediction.lm)^2))
+cat("Root Mean Squared for linear model with all predictors included:",rms.lm)
+# Calculate test r-squared.
+rsquqred <- 1 - error / mean((mytest$Outstate - mean(mytest$Outstate))^2)
+cat("Test R squred of 11 predictors GAM model:",rsquqred)
+
+```
+As the output shows, root mean squred (RMS) of 11 predictors GAM model is smaller than the standard linear model with all predictors inclueded. Test R squred is 0.7575958 which means 75.8% of the variability in 'Outstate' in the testing data set is described by the 11 predictors GAM model. 
+
+
+
+
+
+
