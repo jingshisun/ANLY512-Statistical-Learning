@@ -1,0 +1,276 @@
+---
+title: "HW10"
+author: "Jingshi"
+date: "4/14/2017"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+##Quetsion 1
+
+### Code with improvements from class work:
+```{r}
+# Read the data
+airfoil<-read.table(
+  "http://archive.ics.uci.edu/ml/machine-learning-databases/00291/airfoil_self_noise.dat")
+#head(airfoil)
+
+#nrow(airfoil)
+# Split into train and test
+
+set.seed(6)
+train <- sample(nrow(airfoil), nrow(airfoil) *0.7)
+#length(train)
+mytrain <- airfoil[train, ]
+mytest <- airfoil[-train, ]
+
+######################## Linear model ###########################
+lm.model<-lm(V6~. ,data = mytrain)
+
+# Calculate rms of linear model
+prediction.lm <- predict(lm.model, mytest)
+rms.lm<- sqrt(mean((mytest$V6 - prediction.lm)^2))
+
+######################### Decision Tree model ############################
+#install.packages("tree")
+require(tree)
+tree.model<-tree(V6~. ,data=mytrain)
+#summary(tree.model)
+# plot tree
+#plot(tree.model)
+#text(tree.model, pretty=2)
+# Calculate rms
+prediction.tree <- predict(tree.model, newdata=mytest)
+rms.tree<- sqrt(mean((mytest$V6 - prediction.tree)^2))
+
+######################### Bagging ##############################
+ntrain = nrow(mytrain)
+N = 100 # number of bootstrap samples
+mybag = as.list(rep(NA,N))
+for (j in 1:N){
+  bootstrap = sample(ntrain, replace = TRUE)
+  mybag[[j]] = tree(V6 ~ ., data = mytrain[bootstrap,])
+}
+
+# Prediction
+pred.bag = 0*airfoil$V6[-train]
+for (j in 1:N){
+  pred.bag = pred.bag + predict(mybag[[j]], newdata = mytest)
+}
+pred.bag = pred.bag/N
+# Calculate rms
+rms.bag<- sqrt(mean((mytest$V6 - pred.bag)^2))
+
+####################### Boosted Tree################################
+#install.packages("gbm")
+library(gbm)
+boost.1 = gbm(V6 ~., data = mytrain, distribution = "gaussian", n.trees = 5000, 
+              shrinkage =0.01, interaction.depth =2)
+#summary(boost.1)
+boost.pred.1 = predict(boost.1, newdata=mytest,n.trees = 5000, type ="response")
+# Calculate rms
+rms.boost<- sqrt(mean((mytest$V6 - boost.pred.1)^2))
+
+################## Neural Networks ############################
+library(nnet)
+nnet.model <- nnet(V6 ~.,
+                   size = 3,  data=mytrain,skip = F,
+                   trace = F,maxit = 1000, linout = T)
+
+
+prediction.nnet <- predict(nnet.model, newdata=mytest)
+rms.nnet<- sqrt(mean((mytest$V6 - prediction.nnet)^2))
+
+
+
+```
+
+### Report:
+
+In the class work, our group was assigned to work on Airfoil self noise data. The general goal was to fit models to predict decible lever/scaled sound pressure level (in decibels) by using all the other attributes (Frequency in Hertz, Angle of attack in degrees, Chord length in meters, Free-stream velocity in meters per second and Suction side displacement thickness in meters). 
+
+In the data preperation step, we have diveded the data into 70% training set and 30% testing set.
+
+Then, we have fitted a linear model with all predictors as a baseline case. Then, we fitted a decision tree, applied bagging, applied a boosted tree model. All These models are fitted with all the predictors.
+
+Before looking at the models, let's take a look at the scatter plots of all the variables in order to get an overview of the data set:
+```{r}
+airfoil2<-airfoil
+colnames(airfoil2)<-c("Frequency","Angle of attack","Chord length", 
+                      "Free-stream velocity", "Suction side thickness", "decibel level")
+plot(airfoil2)
+```
+
+It seems that there is not obvious relationship between decible level and other variables. There seems to have a weak negative linear relationship between decible level and frequency. There also seems to have a weak negative linear relationship between decibel level and suction side displacement thickness. Interestingly, there seems to have a moderate to strong positive curved relationship between angle of attack and suction side displacement thickness, as you can see from the scatter plots.
+
+Now, let's take a look at the fitted models and their evaluations.
+
+Firstly, let's take a look at the linear model (which is our baseline model):
+
+```{r}
+summary(lm.model)
+cat ("Root mean squared error of linear model:", rms.lm)
+```
+
+The summary shows that every parametes are significant because their p-values are all less than $\alpha=0.05$. The model is also statistically significant because its p-value ($<2.2\times10^{-16}$) from F-test is much smaller than $\alpha=0.05$. The model's adjusted R-squared is high at 0.5414. And it has a root mean squared error of 4.939. Overall, the linear model fits well.
+
+Secondly, let's take a look at the decision tree model:
+```{r}
+summary(tree.model)
+# plot tree
+plot(tree.model)
+text(tree.model, pretty=1)
+cat ("Root mean squared error of decision tree model:", rms.tree)
+```
+As the summary shows, the decision tree model actually used 4 variables in tree construction. They are V1 (Frequency, in Hertzs), V5 (Suction side displacement thickness, in meters), V3 (Chord length, in meters) and V2 (Angle of attack, in degrees). The above tree graph also shows how the decision tree is constructed. It has a root mean squared of 4.633032 which is close to the root mean squared error of the linear model.
+
+Thirdly, we have fitted a bagging model with all the predictors and 100 as the number of bootstrap samples.
+```{r}
+cat ("Root mean squared error of bagging model:", rms.bag)
+```
+It has a root mean squared error of 3.648248 which is smaller than the previous two models. This indicates that the model fits even better than the previous two models.
+
+Fourthly, we have fitted a boosted tree model. Let's take a look at its summary:
+```{r}
+summary(boost.1)
+cat ("Root mean squared error of boosted tree model:", rms.boost)
+```
+
+As you can see from the output, V1 (Frequency, in Hertzs) has the largest relative influence. V5 (Suction side displacement thickness, in meters) has the second largest relative influence. The other 3 variables (V3-chord length, V2-angle of attack and V4-free-stream velocity) have comparatively lower relative influence. Moreover, root mean squred error of boosted tree model is 2.401303 which indicates that this model fits better than the previous models.
+
+Fifthly, there are other methods for predicting the noise level. Such as neural networks. I also fitted a neural networks model as shown below: 
+
+```{r}
+summary(nnet.model)
+cat ("Root mean squared error of neural networks model:", rms.nnet)
+```
+As the output shows, neural networks model has a higher root mean squred error than decision tree model, bagging model, boosted tree model and linear model. This implies that this neural networks model is not as good as the previous models in terms of model quality.
+
+Last but not least, let's take a look at the root mean squared errors for all the above fiited models:
+```{r}
+as.table(matrix(c("rms_linear_model", rms.lm, "rms_decision_tree_model", rms.tree, 
+                  "rms_bagging",rms.bag, "rms_boosted_tree_model", rms.boost,
+                  "rms_nnet",rms.nnet),nrow = 2))
+```
+
+
+As the output shows, boosted tree model has the lowest root mean squared error (about 2.40) so it is considered as the best model over all the fitted models. 
+
+##Question 2
+
+```{r}
+load("ex0408.rdata")
+#mydf.test
+#mydf.train
+
+################## Fit a tree to the training data ###################
+require(tree)
+set.seed(1)
+mytree<-tree(z~. ,data=mydf.train)
+
+
+# Evaluate the model on the training data 
+pred=predict(mytree, newdata =mydf.train) 
+#pred
+p.pred <- apply(pred, 1, which.max)
+#length(p.pred) 
+#p.pred
+tab=table(mydf.test$z,p.pred)
+tab
+print(paste('Accuracy rate on the training data:', sum(diag(tab))/sum(tab)))
+
+# Evaluate the model on the test data
+pred=predict(mytree, newdata =mydf.test) 
+#pred
+p.pred <- apply(pred, 1, which.max)
+#length(p.pred) 
+#p.pred
+tab=table(mydf.test$z,p.pred)
+tab
+print(paste('Test accuracy rate:', sum(diag(tab))/sum(tab)))
+```
+The accuracy rate on the training data is 0.6344. The test accuracy rate is 0.7521 which indicates that the tree model fits well.
+
+
+```{r}
+########################## Bagging ########################
+
+#install.packages("ipred")
+library(ipred)
+set.seed(1)
+bag.2 <- bagging(z ~ ., data = mydf.train)
+
+# See the accuracy rate on the training data
+pred.bag.2 <- predict(bag.2, newdata = mydf.train)
+tab = table(mydf.train$z,pred.bag.2)
+tab
+print(paste('Accuracy rate on the training data:', sum(diag(tab))/sum(tab)))
+
+# test accuracy rate
+pred.bag.2 <- predict(bag.2, newdata = mydf.test)
+tab = table(mydf.test$z,pred.bag.2)
+tab
+print(paste('Test accuracy rate:', sum(diag(tab))/sum(tab)))
+
+
+
+
+```
+
+As the output shows, the accuracy rate on the training data is 0.9985 which is very close to 1. So it is possible to obtain a perfect fit on the training data.
+The test accuracy rate is 0.7434 which is slightly lower than the tree model but still fits well.
+
+```{r}
+#################### Random Forest #########################
+library(randomForest)
+set.seed(1)
+myrf = randomForest(z ~., data=mydf.train, mtry = ceiling(sqrt(10)), importance = TRUE)
+
+# See the accuracy rate on the training data
+pred <- predict(myrf, newdata = mydf.train)
+tab = table(mydf.train$z,pred)
+tab
+print(paste('Accuracy rate on the training data:', sum(diag(tab))/sum(tab)))
+
+# test accuracy rate
+pred<- predict(myrf, newdata = mydf.test)
+tab = table(mydf.test$z,pred)
+tab
+print(paste('Test accuracy rate:', sum(diag(tab))/sum(tab)))
+
+```
+
+As the output shows, accuracy rate on the training data is 1 which means it is possible to obtain a perfect fit on the training data.
+
+The test accurcy rate is 0.7568 which is about the same as the previous 2 models. The model fits well overall.
+
+```{r}
+########### Boosted tree ###################
+library(gbm)
+set.seed(1)
+mydf.train$z<-as.numeric(mydf.train$z)-1
+mydf.test$z<-as.numeric(mydf.test$z)-1
+
+boosting<-gbm(z~.,data=mydf.train, distribution='bernoulli',
+              n.trees=5000,shrinkage=0.002,interaction.depth = 10)
+
+# See the accuracy rate on the training data
+pred <- predict(boosting, newdata = mydf.train,n.trees = 5000, type = "response")
+tab = table(mydf.train$z,pred>0.5)
+tab
+print(paste('Accuracy rate on the training data:', sum(diag(tab))/sum(tab)))
+
+# test accuracy rate
+pred<- predict(boosting, newdata = mydf.test,n.trees = 5000, type = "response")
+tab = table(mydf.test$z,pred>0.5)
+tab
+print(paste('Test accuracy rate:', sum(diag(tab))/sum(tab)))
+
+```
+
+As the output shows, the accuracy rate on the training data is 0.8064. The training data has been fitted well but not as perfect as bagging and random forest.
+The test accuracy rate is 0.7585 which means this model performs well in the test data and the test accuracy rate is about the same level as the previous models.
+
